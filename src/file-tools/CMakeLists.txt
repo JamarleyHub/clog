@@ -1,0 +1,1 @@
+target_sources(clog PRIVATE file-utils.c)
