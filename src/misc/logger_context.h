@@ -7,11 +7,11 @@
 
 enum LOG_LEVEL
 {
-        LOG_DEBUG = 0,
-        LOG_INFO,
-        LOG_WARN,
-        LOG_ERROR,
-        LOG_FATAL
+        LEVEL_LOG_DEBUG = 0,
+        LEVEL_LOG_INFO,
+        LEVEL_LOG_WARN,
+        LEVEL_LOG_ERROR,
+        LEVEL_LOG_FATAL
 };
 
 struct logger_ctx
