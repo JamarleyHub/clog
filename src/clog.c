@@ -1,10 +1,50 @@
 #include "clog.h"
 
+void append_to_file( struct logger_ctx* ctx, const char* msg ) {
+        if ( NULL == msg ) {
+                ctx->status = INVALID_PARAM;
+                return;
+        }
+
+        ctx->file = fopen( ctx->path, "a" );
+        if ( NULL == ctx->file ) {
+                ctx->status = FAILED_TO_OPEN;
+                return;
+        }
+
+        if ( EOF == fputs( msg, ctx->file ) ) {
+                fclose( ctx->file );
+                ctx->status = WRITE_ERROR;
+                return;
+        }
+
+        if ( fclose( ctx->file ) != 0 ) {
+                ctx->status = FAILED_TO_CLOSE;
+                return;
+        }
+
+        ctx->status = SUCCESS;
+}
+
+int create_directory( const char* path ) {
+        if ( NULL == path ) {
+                return INVALID_PARAM;
+        }
+
+        if ( mkdir( path, 0777 ) == -1 ) {
+                if ( errno != EEXIST ) {
+                        return FAILED_TO_CREATE_DIR;
+                }
+        }
+
+        return SUCCESS;
+}
+
 int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt, ... ) {
         if ( NULL == ctx || NULL == fmt ) {
                 return INVALID_PARAM;
         }
-        if ( ctx->default_level < level ) {
+        if ( ctx->default_level > level ) {
                 return SUCCESS;
         }
 
@@ -79,7 +119,7 @@ int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt,
 
 struct logger_ctx* register_logger( const enum LOG_LEVEL default_level, const char* path ) {
         struct logger_ctx* ctx = malloc( sizeof( struct logger_ctx ) );
-        // Create a  directory and write an empty log into it
+        // Create a directory and write an empty log into it
         if ( create_directory( path ) != SUCCESS ) {
                 ctx->status = FAILED_TO_CREATE_DIR;
                 return ctx;
@@ -100,7 +140,7 @@ struct logger_ctx* register_logger( const enum LOG_LEVEL default_level, const ch
         }
         const time_t     now = time( NULL );
         const struct tm* t   = localtime( &now );
-        strftime( log_file_name, 20, "%Y-%m-%d_%H-%M-%S", t );
+        strftime( formatted_time, 20, "%Y-%m-%d_%H-%M-%S", t );
         snprintf( log_file_name, strlen( path ) + 29, "%s/log-%s.log", path, formatted_time );
         free( formatted_time );
 
@@ -113,7 +153,6 @@ struct logger_ctx* register_logger( const enum LOG_LEVEL default_level, const ch
         append_to_file( ctx, INIT_LOG );
         if ( ctx->status != SUCCESS ) {
                 free( ctx->path );
-                ctx->status = FAILED_TO_CREATE_LOG;
                 return ctx;
         }
 
