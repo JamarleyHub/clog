@@ -93,8 +93,8 @@ int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt,
         const int message_len = vsnprintf( NULL, 0, fmt, args );
         va_end( args );
 
-        // Total length = prefix length + message length + '\0'
-        const int total_len = prefix_len + message_len + 1;
+        // Total length = prefix length + message length + '\n\0'
+        const int total_len = prefix_len + message_len + 2;
 
         char*     buffer    = malloc( total_len );
         if ( !buffer ) {
@@ -109,6 +109,8 @@ int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt,
         va_start( args2, fmt );
         vsnprintf( buffer + prefix_len, total_len - prefix_len, fmt, args2 );
         va_end( args2 );
+
+        strcat(buffer, "\n");
 
         append_to_file( ctx, buffer );
 
