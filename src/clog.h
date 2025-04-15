@@ -2,6 +2,7 @@
 #define CLOG_H
 
 #include <errno.h>
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,10 +51,11 @@ enum LOG_LEVEL
 
 struct logger_ctx
 {
-        char*          path;
-        enum LOG_LEVEL default_level;
-        FILE*          file;
-        enum ERROR_T   status;
+        pthread_mutex_t mutex;
+        char*           path;
+        enum LOG_LEVEL  default_level;
+        FILE*           file;
+        enum ERROR_T    status;
 };
 
 /**

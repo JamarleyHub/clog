@@ -1,29 +1,38 @@
 #include "clog.h"
 
 void append_to_file( struct logger_ctx* ctx, const char* msg ) {
+        if ( pthread_mutex_lock( &ctx->mutex ) != 0 ) {
+                return;
+        }
+
         if ( NULL == msg ) {
                 ctx->status = INVALID_PARAM;
+                pthread_mutex_unlock( &ctx->mutex );
                 return;
         }
 
         ctx->file = fopen( ctx->path, "a" );
         if ( NULL == ctx->file ) {
                 ctx->status = FAILED_TO_OPEN;
+                pthread_mutex_unlock( &ctx->mutex );
                 return;
         }
 
         if ( EOF == fputs( msg, ctx->file ) ) {
                 fclose( ctx->file );
                 ctx->status = WRITE_ERROR;
+                pthread_mutex_unlock( &ctx->mutex );
                 return;
         }
 
         if ( fclose( ctx->file ) != 0 ) {
                 ctx->status = FAILED_TO_CLOSE;
+                pthread_mutex_unlock( &ctx->mutex );
                 return;
         }
 
         ctx->status = SUCCESS;
+        pthread_mutex_unlock( &ctx->mutex );
 }
 
 int create_directory( const char* path ) {
@@ -110,7 +119,7 @@ int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt,
         vsnprintf( buffer + prefix_len, total_len - prefix_len, fmt, args2 );
         va_end( args2 );
 
-        strcat(buffer, "\n");
+        strcat( buffer, "\n" );
 
         append_to_file( ctx, buffer );
 
@@ -151,6 +160,7 @@ struct logger_ctx* register_logger( const enum LOG_LEVEL default_level, const ch
         ctx->default_level = default_level;
         ctx->file          = NULL;
         ctx->status        = SUCCESS;
+        pthread_mutex_init( &ctx->mutex, NULL );
 
         append_to_file( ctx, INIT_LOG );
         if ( ctx->status != SUCCESS ) {
