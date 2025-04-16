@@ -4,7 +4,7 @@ CLOG is a simple C logging library that provides a convenient way to log message
 
 It is fairly lightweight, mostly multi-threading safe and easy to use, making it suitable for both small and medium
 sized projects.
-IT is by no means an enterprise-grade solution, but it is a good starting point for when you need a small but functional
+It is by no means an enterprise-grade solution, but it is a good starting point for when you need a small but functional
 logger.
 
 It focuses on the most basic aspects of logging, so it is by no means as feature-complete as other C implementations.
