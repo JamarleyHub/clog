@@ -26,7 +26,14 @@ This will install the library as a shared object into your include directories.
 
 ## Usage
 
-You can then use it by simply doing
+You need to include clog in your CMakeLists.txt file:
+
+```cmake
+find_package(clog REQUIRED)
+target_link_libraries(YourProjectName PRIVATE clog::clog)
+```
+
+You can then use it by simply including this header:
 
 ```c
 #include <clog.h>
