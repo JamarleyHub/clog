@@ -1,6 +1,13 @@
 #include "clog.h"
 
-void append_to_file( struct logger_ctx* ctx, const char* msg ) {
+/**
+ * Appends a message to a log file.
+ *
+ * @param ctx The logger context containing the file pointer and path - The return status is saved
+ * in the status field of the context
+ * @param msg The message to write to it
+ */
+__LIB_INTERNAL void append_to_file( struct logger_ctx* ctx, const char* msg ) {
         if ( pthread_mutex_lock( &ctx->mutex ) != 0 ) {
                 return;
         }
@@ -35,12 +42,18 @@ void append_to_file( struct logger_ctx* ctx, const char* msg ) {
         pthread_mutex_unlock( &ctx->mutex );
 }
 
-int create_directory( const char* path ) {
+/**
+ * Creates a directory.
+ *
+ * @param path The path to the directory
+ * @return enum CLOG_ERROR_T to indicate status
+ */
+__LIB_INTERNAL enum CLOG_ERROR_T create_directory( const char* path ) {
         if ( NULL == path ) {
                 return INVALID_PARAM;
         }
 
-        if ( mkdir( path, 0777 ) == -1 ) {
+        if ( -1 == mkdir( path, 0644 ) ) {
                 if ( errno != EEXIST ) {
                         return FAILED_TO_CREATE_DIR;
                 }
@@ -49,11 +62,40 @@ int create_directory( const char* path ) {
         return SUCCESS;
 }
 
-int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt, ... ) {
+/**
+ * Returns a current timestamp in the format HH:MM:SS.xx
+ *
+ * @return A malloc'd string with the timestamp
+ */
+__LIB_INTERNAL char* get_timestamp( void ) {
+        // Get current time with microsecond precision
+        struct timespec ts;
+        clock_gettime( CLOCK_REALTIME, &ts );
+        const struct tm* tm_info       = localtime( &ts.tv_sec );
+
+        const int        len_timestamp = 12; // HH:MM:SS.xx + null terminator
+        char*            timestamp     = malloc( len_timestamp * sizeof( char ) );
+        if ( NULL == timestamp ) {
+                return NULL;
+        }
+        snprintf( timestamp,
+                  len_timestamp,
+                  "%02d:%02d:%02d.%02ld",
+                  tm_info->tm_hour,
+                  tm_info->tm_min,
+                  tm_info->tm_sec,
+                  ts.tv_nsec / 10000000 ); // Convert nanoseconds to hundredths
+        return timestamp;
+}
+
+enum CLOG_ERROR_T
+logger( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level, const char* fmt, ... )
+{
         if ( NULL == ctx || NULL == fmt ) {
                 return INVALID_PARAM;
         }
         if ( ctx->default_level > level ) {
+                ctx->status = SUCCESS;
                 return SUCCESS;
         }
 
@@ -79,25 +121,16 @@ int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt,
                         break;
         }
 
-        // Get current time with microsecond precision
-        struct timespec ts;
-        clock_gettime( CLOCK_REALTIME, &ts );
-        const struct tm* tm_info = localtime( &ts.tv_sec );
+        char* timestamp = get_timestamp( );
+        if ( NULL == timestamp ) {
+                timestamp = "00:00:00.00";
+        }
 
-        char             timestamp[13]; // HH:MM:SS.xx + null terminator
-        snprintf( timestamp,
-                  sizeof( timestamp ),
-                  "%02d:%02d:%02d.%02ld",
-                  tm_info->tm_hour,
-                  tm_info->tm_min,
-                  tm_info->tm_sec,
-                  ts.tv_nsec / 10000000 ); // Convert nanoseconds to hundredths
-
-        const int prefix_len =
-            (int) ( strlen( level_str ) + strlen( timestamp ) + 5 ); // +5 for " - " and ": "
+        const int prefix_len = (int) ( strlen( timestamp ) + 3 + strlen( level_str )
+                                       + 2 ); // +3 for " - " and +3 for ": " with
 
         // Calculate the length needed for the formatted message
-        va_list args;
+        va_list   args;
         va_start( args, fmt );
         const int message_len = vsnprintf( NULL, 0, fmt, args );
         va_end( args );
@@ -107,11 +140,13 @@ int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt,
 
         char*     buffer    = malloc( total_len );
         if ( !buffer ) {
+                ctx->status = ALLOC_ERR;
                 return ALLOC_ERR;
         }
 
-        // Format the prefix with level and timestamp
-        snprintf( buffer, total_len, "%s - %s: ", level_str, timestamp );
+        // Format the prefix with timestamp and level
+        snprintf( buffer, total_len, "%s - %s: ", timestamp, level_str );
+        free( timestamp );
 
         // Append the formatted message after the prefix
         va_list args2;
@@ -128,8 +163,17 @@ int logger( struct logger_ctx* ctx, const enum LOG_LEVEL level, const char* fmt,
         return ctx->status;
 }
 
-struct logger_ctx* register_logger( const enum LOG_LEVEL default_level, const char* path ) {
+struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level, const char* path ) {
         struct logger_ctx* ctx = malloc( sizeof( struct logger_ctx ) );
+        if ( NULL == ctx ) {
+                return NULL;
+        }
+
+        if ( NULL == path ) {
+                ctx->status = INVALID_PARAM;
+                return ctx;
+        }
+
         // Create a directory and write an empty log into it
         if ( create_directory( path ) != SUCCESS ) {
                 ctx->status = FAILED_TO_CREATE_DIR;
@@ -162,7 +206,18 @@ struct logger_ctx* register_logger( const enum LOG_LEVEL default_level, const ch
         ctx->status        = SUCCESS;
         pthread_mutex_init( &ctx->mutex, NULL );
 
-        append_to_file( ctx, INIT_LOG );
+        char*     timestamp    = get_timestamp( );
+        const int init_str_len = (int) ( strlen( INIT_LOG ) + strlen( timestamp )
+                                         + 5 ); // + 3 for " - " and + 2 for '\n\0'
+        char*     init_log_str = malloc( init_str_len * sizeof( char ) );
+        if ( NULL == init_log_str ) {
+                ctx->status = ALLOC_ERR;
+                free( ctx->path );
+                return ctx;
+        }
+        snprintf( init_log_str, init_str_len, "%s - %s", timestamp, INIT_LOG );
+        append_to_file( ctx, init_log_str );
+
         if ( ctx->status != SUCCESS ) {
                 free( ctx->path );
                 return ctx;
@@ -171,3 +226,7 @@ struct logger_ctx* register_logger( const enum LOG_LEVEL default_level, const ch
         return ctx;
 }
 
+void unregister_logger( struct logger_ctx* ctx ) {
+        free( ctx );
+        ctx = NULL;
+}
