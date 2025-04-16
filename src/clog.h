@@ -1,9 +1,11 @@
 #ifndef CLOG_H
 #define CLOG_H
 
+#include <dirent.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +23,7 @@
 #define LOG_FATAL_STR               "[FATAL]"
 #define LOG_UNKNOWN_STR             "[UNKNOWN]"
 
+#define CLOG_MAX_LOG_FILES          10
 #define __LIB_INTERNAL              __attribute__( ( visibility( "hidden" ) ) )
 
 #define CLOG_DEBUG( ctx, fmt, ... ) logger( ctx, LEVEL_LOG_DEBUG, fmt, ##__VA_ARGS__ )
@@ -31,6 +34,7 @@
 
 enum CLOG_ERROR_T
 {
+        UNINITIALIZED        = 1,
         SUCCESS              = 0,
         GENERIC_ERR          = -1,
         INVALID_PARAM        = -2,
@@ -49,22 +53,24 @@ enum CLOG_LOG_LEVEL
         LEVEL_LOG_INFO,
         LEVEL_LOG_WARN,
         LEVEL_LOG_ERROR,
-        LEVEL_LOG_FATAL
+        LEVEL_LOG_FATAL,
 };
 
 struct logger_ctx
 {
         pthread_mutex_t     mutex;
         char*               path;
+        char*               directory;
         enum CLOG_LOG_LEVEL default_level;
         FILE*               file;
+        uint8_t             max_logs;
         enum CLOG_ERROR_T   status;
 };
 
 /**
  * Logs a message with a specific log level.
  *
- * @param ctx   The logger context containing the file pointer and path
+ * @param ctx   The logger context
  * @param level The log level (DEBUG, INFO, WARN, ERROR, FATAL)
  * @param fmt   The format string for the message
  * @param ...   The values to format into the message
@@ -73,19 +79,36 @@ struct logger_ctx
 enum CLOG_ERROR_T logger( struct logger_ctx* ctx, enum CLOG_LOG_LEVEL level, const char* fmt, ... );
 
 /**
+ * Appends a message to a log file.
+ *
+ * @param ctx The logger context
+ * @return enum CLOG_LOG_LEVEL to indicate current log level
+ */
+enum CLOG_LOG_LEVEL get_log_level( struct logger_ctx* ctx );
+
+/**
+ * Sets the log level for a logger context.
+ *
+ * @param ctx   The logger context
+ * @param level The log level to set to (DEBUG, INFO, WARN, ERROR, FATAL)
+ * @return enum CLOG_ERROR_T to indicate status
+ */
+enum CLOG_ERROR_T   set_log_level( struct logger_ctx* ctx, enum CLOG_LOG_LEVEL level );
+
+/**
  * Registers a logger context with a default log level and path.
  *
  * @param default_level The default log level (DEBUG, INFO, WARN, ERROR, FATAL)
  * @param path         The path to the log file
  * @return A pointer to the logger context
  */
-struct logger_ctx* register_logger( enum CLOG_LOG_LEVEL default_level, const char* path );
+struct logger_ctx*  register_logger( enum CLOG_LOG_LEVEL default_level, const char* path );
 
 /**
  * Unregisters a logger context and frees the associated resources.
  *
  * @param ctx The logger context to unregister
  */
-void               unregister_logger( struct logger_ctx* ctx );
+void                unregister_logger( struct logger_ctx** ctx );
 
 #endif // CLOG_H

@@ -1,0 +1,13 @@
+21:36:54.12 - [INIT]: Initializing logfile
+21:36:54.12 - [INFO]: Logger initialized successfully
+21:36:54.12 - [INFO]: Path set to .test_dir/log-2025-04-16_21-36-54.log
+21:36:54.12 - [INFO]: Directory set to .test_dir
+21:36:54.12 - [INFO]: Max logs set to 10
+21:36:54.12 - [DEBUG]: This is a debug message
+21:36:54.12 - [INFO]: This is an info message
+21:36:54.12 - [WARN]: This is a warning message
+21:36:54.12 - [ERROR]: This is an error message
+21:36:54.12 - [FATAL]: This is a fatal message
+21:36:54.12 - [DEBUG]: This is a message with 2 arguments
+21:36:54.12 - [ERROR]: This is a visible error message
+21:36:54.12 - [FATAL]: This is a visible fatal message
