@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
-project(clog VERSION 1.6.2 LANGUAGES C)
+project(clog VERSION 1.6.3 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
 

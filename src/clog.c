@@ -131,6 +131,9 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
                 char** tmp = realloc( logs, ( count + 1 ) * sizeof( char* ) );
                 if ( NULL == tmp ) {
                         for ( size_t i = 0; i < count; i++ ) {
+                                if ( NULL == logs ) {
+                                        break;
+                                }
                                 free( logs[i] );
                         }
                         free( logs );
@@ -157,6 +160,9 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
         // If we haven't reached the max number of logs, we can return
         if ( count <= ctx->max_logs ) {
                 for ( size_t i = 0; i < count; i++ ) {
+                        if ( NULL == logs ) {
+                                break;
+                        }
                         free( logs[i] );
                 }
                 free( logs );
@@ -169,6 +175,9 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
         size_t num_delete = count - ctx->max_logs;
         for ( size_t i = 0; i < num_delete; i++ ) {
                 char full_path[PATH_MAX];
+                if ( NULL == logs ) {
+                        break;
+                }
                 snprintf( full_path, sizeof( full_path ), "%s/%s", ctx->directory, logs[i] );
                 if ( remove( full_path ) != 0 ) {
                         ctx->status = WRITE_ERROR;
@@ -177,6 +186,9 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
 
         // Cleanup
         for ( size_t i = 0; i < count; i++ ) {
+                if ( NULL == logs ) {
+                        break;
+                }
                 free( logs[i] );
         }
         free( logs );
