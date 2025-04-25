@@ -49,8 +49,6 @@ install(FILES
 
 add_subdirectory(src)
 
-find_package(clog REQUIRED)
-
 add_executable(test-log example/test-log.c)
 
-target_link_libraries(test-log PRIVATE clog::clog)
+target_link_libraries(test-log PRIVATE clog)
