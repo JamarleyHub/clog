@@ -8,8 +8,8 @@ url="https://gitlab.com/Jamarley/clog"
 license=('GPL')
 depends=('glibc')
 makedepends=('git' 'cmake')
-provides=("${pkgname%-VCS}")
-conflicts=("${pkgname%-VCS}")
+provides=("${pkgname%-git}")
+conflicts=("${pkgname%-git}")
 source=("$pkgname::git+$url")
 sha256sums=('SKIP')
 
