@@ -1,5 +1,5 @@
 # Maintainer: Chris Hölzer <jamarleydev at proton dot me>
-pkgname='clog-logger-git'
+pkgname='libclog-git'
 pkgver='r15.d0e4b2a'
 pkgrel=1
 pkgdesc="A small and simple C-logging library"
@@ -21,7 +21,7 @@ pkgver() {
 build() {
 	cd "$pkgname"
 	cmake -B cmake-build
-        cmake --build cmake-build -j 6
+    cmake --build cmake-build -j 6
 }
 
 package() {
