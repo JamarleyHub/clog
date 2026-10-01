@@ -212,7 +212,7 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
 // ------------------------------------------------------------------------ //
 
 enum CLOG_ERROR_T
-logger( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level, const char* fmt, ... )
+log_message( struct logger_ctx* ctx, const CLOG_LOG_LEVEL level, const char* fmt, ... )
 {
         if (NULL == ctx || NULL == fmt) {
                 return INVALID_PARAM;

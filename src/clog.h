@@ -21,11 +21,11 @@
 #define CLOG_MAX_LOG_FILES          10
 #define __LIB_INTERNAL              __attribute__( ( visibility( "hidden" ) ) )
 
-#define CLOG_DEBUG( ctx, fmt, ... ) logger( ctx, LEVEL_LOG_DEBUG, fmt, ##__VA_ARGS__ )
-#define CLOG_INFO( ctx, fmt, ... )  logger( ctx, LEVEL_LOG_INFO, fmt, ##__VA_ARGS__ )
-#define CLOG_WARN( ctx, fmt, ... )  logger( ctx, LEVEL_LOG_WARN, fmt, ##__VA_ARGS__ )
-#define CLOG_ERROR( ctx, fmt, ... ) logger( ctx, LEVEL_LOG_ERROR, fmt, ##__VA_ARGS__ )
-#define CLOG_FATAL( ctx, fmt, ... ) logger( ctx, LEVEL_LOG_FATAL, fmt, ##__VA_ARGS__ )
+#define CLOG_DEBUG( ctx, fmt, ... ) log_message( ctx, LEVEL_LOG_DEBUG, fmt, ##__VA_ARGS__ )
+#define CLOG_INFO( ctx, fmt, ... )  log_message( ctx, LEVEL_LOG_INFO, fmt, ##__VA_ARGS__ )
+#define CLOG_WARN( ctx, fmt, ... )  log_message( ctx, LEVEL_LOG_WARN, fmt, ##__VA_ARGS__ )
+#define CLOG_ERROR( ctx, fmt, ... ) log_message( ctx, LEVEL_LOG_ERROR, fmt, ##__VA_ARGS__ )
+#define CLOG_FATAL( ctx, fmt, ... ) log_message( ctx, LEVEL_LOG_FATAL, fmt, ##__VA_ARGS__ )
 
 enum CLOG_ERROR_T
 {
