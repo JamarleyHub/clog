@@ -103,6 +103,24 @@ enum CLOG_ERROR_T set_log_level( struct logger_ctx* ctx, CLOG_LOG_LEVEL level );
 struct logger_ctx* register_logger( CLOG_LOG_LEVEL default_level, const char* path );
 
 /**
+ * Change the text that is being displayed in the log file before the individual
+ * log levels.
+ *
+ * @param ctx The logger context
+ * @param level The level for which to change the logging text
+ * @param new_str The new logging text
+ */
+void change_logging_strings( struct logger_ctx* ctx, CLOG_LOG_LEVEL level, char* new_str );
+
+/**
+ * Change the retention policy for how many old log files you want to keep
+ *
+ * @param ctx The logger context
+ * @param num The number of logfiles to keep (0 disabling the log cleanup)
+ */
+void change_retained_logfiles( struct logger_ctx* ctx, size_t num );
+
+/**
  * Unregisters a logger context and frees the associated resources.
  *
  * @param ctx The logger context to unregister

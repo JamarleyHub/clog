@@ -385,6 +385,33 @@ struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
         return ctx;
 }
 
+void change_logging_strings( struct logger_ctx* ctx, const CLOG_LOG_LEVEL level, char* new_str ) {
+        switch (level) {
+                case LEVEL_LOG_DEBUG :
+                        ctx->text_config.log_debug_str = new_str;
+                        break;
+                case LEVEL_LOG_INFO :
+                        ctx->text_config.log_info_str = new_str;
+                        break;
+                case LEVEL_LOG_WARN :
+                        ctx->text_config.log_warn_str = new_str;
+                        break;
+                case LEVEL_LOG_ERROR :
+                        ctx->text_config.log_error_str = new_str;
+                        break;
+                case LEVEL_LOG_FATAL :
+                        ctx->text_config.log_fatal_str = new_str;
+                        break;
+                default :
+                        ctx->text_config.log_unknown_str = new_str;
+                        break;
+        }
+}
+
+void change_retained_logfiles( struct logger_ctx* ctx, const size_t num ) {
+        ctx->max_logs = num;
+}
+
 void unregister_logger( struct logger_ctx** ctx ) {
         pthread_mutex_lock( &( *ctx )->mutex );
         free( ( *ctx )->path );
