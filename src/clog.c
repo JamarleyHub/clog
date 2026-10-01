@@ -118,6 +118,10 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
         if (NULL == ctx) {
                 return INVALID_PARAM;
         }
+        if (ctx->max_logs == 0) {
+                return SUCCESS;
+        }
+
         DIR* dp = opendir( ctx->directory );
         if (NULL == dp) {
                 ctx->status = FAILED_TO_OPEN;
