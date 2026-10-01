@@ -8,9 +8,6 @@
 #define GET_STATUS( ctx )           ( ctx->status )
 
 #define CLOG_DEFAULT_MAX_LOG_FILES  10
-#ifndef INIT_LOG
-  #define INIT_LOG "[INIT]: Initializing logfile\n"
-#endif
 
 #define __LIB_INTERNAL              __attribute__( ( visibility( "hidden" ) ) )
 
