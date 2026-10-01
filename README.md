@@ -68,7 +68,7 @@ unregister_logger( &ctx );
 To log messages you can either manually call the logger function directly (which is messy and not recommended):
 
 ```c
-logger( struct logger_ctx* ctx, enum CLOG_LOG_LEVEL level, const char* fmt, ... );
+log_message( struct logger_ctx* ctx, CLOG_LOG_LEVEL level, const char* fmt, ... );
 ```
 
 or use the convenience macros provided:
@@ -103,11 +103,22 @@ This will produce a log like this:
 21:42:27.42 - [DEBUG]: Message 42 - A teststring
 ```
 
-Refer to the `test-clog.c` file in `example` for a detailed usage example of all the usable features.
+You can change the text that is written in front of the messages of a log level with `change_logging_strings`:
+
+```c
+change_logging_strings( ctx, LEVEL_LOG_ERROR, "error" );
+```
+
+You can change how many old log files are kept with `change_retained_logfiles` (`0` disables the log cleanup):
+
+```c
+change_retained_logfiles( ctx, 20 );
+```
+
+Refer to the `test-log.c` file in `example` for a detailed usage example of all the usable features.
 
 ## Planned Features
 
-- Add support for dynamically changing the number of saved logs
 - Add support for custom log formatting
 - Add support for custom log file naming
 - Add support for custom log levels
