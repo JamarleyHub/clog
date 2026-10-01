@@ -1,6 +1,6 @@
 # Maintainer: Chris Hölzer <jamarleydev at proton dot me>
 pkgname='libclog-git'
-pkgver='r15.d0e4b2a'
+pkgver=r31.54d5b66
 pkgrel=1
 pkgdesc="A small and simple C-logging library"
 arch=(x86_64)
