@@ -1,20 +1,15 @@
 #ifndef CLOG_H
 #define CLOG_H
 
-#include <dirent.h>
-#include <errno.h>
-#include <pthread.h>
-#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <time.h>
 
-#define GET_STATUS( ctx )           ( ctx->status )
+#define GET_STATUS( ctx ) ( ctx->status )
 
-#define INIT_LOG                    "[INIT]: Initializing logfile\n"
+#ifndef INIT_LOG
+  #define INIT_LOG "[INIT]: Initializing logfile\n"
+#endif
 
 #define LOG_DEBUG_STR               "[DEBUG]"
 #define LOG_INFO_STR                "[INFO]"

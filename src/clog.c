@@ -1,5 +1,13 @@
 #include "clog.h"
 
+#include <dirent.h>
+#include <errno.h>
+#include <pthread.h>
+#include <stdarg.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <time.h>
+
 /**
  * Appends a message to a log file.
  *
@@ -8,31 +16,31 @@
  * @param msg The message to write to it
  */
 __LIB_INTERNAL void append_to_file( struct logger_ctx* ctx, const char* msg ) {
-        if ( pthread_mutex_lock( &ctx->mutex ) != 0 ) {
+        if (pthread_mutex_lock( &ctx->mutex ) != 0) {
                 return;
         }
 
-        if ( NULL == msg ) {
+        if (NULL == msg) {
                 ctx->status = INVALID_PARAM;
                 pthread_mutex_unlock( &ctx->mutex );
                 return;
         }
 
         ctx->file = fopen( ctx->path, "a" );
-        if ( NULL == ctx->file ) {
+        if (NULL == ctx->file) {
                 ctx->status = FAILED_TO_OPEN;
                 pthread_mutex_unlock( &ctx->mutex );
                 return;
         }
 
-        if ( EOF == fputs( msg, ctx->file ) ) {
+        if (EOF == fputs( msg, ctx->file )) {
                 fclose( ctx->file );
                 ctx->status = WRITE_ERROR;
                 pthread_mutex_unlock( &ctx->mutex );
                 return;
         }
 
-        if ( fclose( ctx->file ) != 0 ) {
+        if (fclose( ctx->file ) != 0) {
                 ctx->status = FAILED_TO_CLOSE;
                 pthread_mutex_unlock( &ctx->mutex );
                 return;
@@ -49,11 +57,11 @@ __LIB_INTERNAL void append_to_file( struct logger_ctx* ctx, const char* msg ) {
  * @return enum CLOG_ERROR_T to indicate status
  */
 __LIB_INTERNAL enum CLOG_ERROR_T create_directory( const char* path ) {
-        if ( NULL == path ) {
+        if (NULL == path) {
                 return INVALID_PARAM;
         }
-        if ( -1 == mkdir( path, 0777 ) ) {
-                if ( errno != EEXIST ) {
+        if (-1 == mkdir( path, 0777 )) {
+                if (errno != EEXIST) {
                         return FAILED_TO_CREATE_DIR;
                 }
         }
@@ -74,7 +82,7 @@ __LIB_INTERNAL char* get_timestamp( void ) {
 
         const int        len_timestamp = 12; // HH:MM:SS.xx + null terminator
         char*            timestamp     = malloc( len_timestamp * sizeof( char ) );
-        if ( NULL == timestamp ) {
+        if (NULL == timestamp) {
                 return NULL;
         }
         snprintf( timestamp,
@@ -107,11 +115,11 @@ __LIB_INTERNAL int cmp( const void* a, const void* b ) {
  * @return enum CLOG_ERROR_T to indicate status
  */
 __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
-        if ( NULL == ctx ) {
+        if (NULL == ctx) {
                 return INVALID_PARAM;
         }
         DIR* dp = opendir( ctx->directory );
-        if ( NULL == dp ) {
+        if (NULL == dp) {
                 ctx->status = FAILED_TO_OPEN;
                 return ctx->status;
         }
@@ -120,18 +128,18 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
         char**         logs = NULL;
 
         // Count how many logs are in the log directory
-        while ( ( ep = readdir( dp ) ) ) {
-                if ( strncmp( ep->d_name, "log-", 4 ) != 0 ) {
+        while (( ep = readdir( dp ) )) {
+                if (strncmp( ep->d_name, "log-", 4 ) != 0) {
                         continue;
                 }
                 size_t len = strlen( ep->d_name );
-                if ( len != 27 || strcmp( ep->d_name + len - 4, ".log" ) != 0 ) {
+                if (len != 27 || strcmp( ep->d_name + len - 4, ".log" ) != 0) {
                         continue;
                 }
                 char** tmp = realloc( logs, ( count + 1 ) * sizeof( char* ) );
-                if ( NULL == tmp ) {
-                        for ( size_t i = 0; i < count; i++ ) {
-                                if ( NULL == logs ) {
+                if (NULL == tmp) {
+                        for (size_t i = 0; i < count; i++) {
+                                if (NULL == logs) {
                                         break;
                                 }
                                 free( logs[i] );
@@ -144,8 +152,8 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
 
                 logs        = tmp;
                 logs[count] = strdup( ep->d_name );
-                if ( NULL == logs[count] ) {
-                        for ( size_t i = 0; i < count; i++ ) {
+                if (NULL == logs[count]) {
+                        for (size_t i = 0; i < count; i++) {
                                 free( logs[i] );
                         }
                         free( logs );
@@ -158,9 +166,9 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
         closedir( dp );
 
         // If we haven't reached the max number of logs, we can return
-        if ( count <= ctx->max_logs ) {
-                for ( size_t i = 0; i < count; i++ ) {
-                        if ( NULL == logs ) {
+        if (count <= ctx->max_logs) {
+                for (size_t i = 0; i < count; i++) {
+                        if (NULL == logs) {
                                 break;
                         }
                         free( logs[i] );
@@ -173,20 +181,20 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
         // Sort lexicographically and remove the oldest logs
         qsort( logs, count, sizeof( char* ), cmp );
         size_t num_delete = count - ctx->max_logs;
-        for ( size_t i = 0; i < num_delete; i++ ) {
+        for (size_t i = 0; i < num_delete; i++) {
                 char full_path[PATH_MAX];
-                if ( NULL == logs ) {
+                if (NULL == logs) {
                         break;
                 }
                 snprintf( full_path, sizeof( full_path ), "%s/%s", ctx->directory, logs[i] );
-                if ( remove( full_path ) != 0 ) {
+                if (remove( full_path ) != 0) {
                         ctx->status = WRITE_ERROR;
                 }
         }
 
         // Cleanup
-        for ( size_t i = 0; i < count; i++ ) {
-                if ( NULL == logs ) {
+        for (size_t i = 0; i < count; i++) {
+                if (NULL == logs) {
                         break;
                 }
                 free( logs[i] );
@@ -202,16 +210,16 @@ __LIB_INTERNAL enum CLOG_ERROR_T cleanup_old_logs( struct logger_ctx* ctx ) {
 enum CLOG_ERROR_T
 logger( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level, const char* fmt, ... )
 {
-        if ( NULL == ctx || NULL == fmt ) {
+        if (NULL == ctx || NULL == fmt) {
                 return INVALID_PARAM;
         }
-        if ( ctx->default_level > level ) {
+        if (ctx->default_level > level) {
                 ctx->status = SUCCESS;
                 return SUCCESS;
         }
 
         const char* level_str;
-        switch ( level ) {
+        switch (level) {
                 case LEVEL_LOG_DEBUG :
                         level_str = LOG_DEBUG_STR;
                         break;
@@ -233,7 +241,7 @@ logger( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level, const char* fmt
         }
 
         char* timestamp = get_timestamp( );
-        if ( NULL == timestamp ) {
+        if (NULL == timestamp) {
                 timestamp = "00:00:00.00";
         }
 
@@ -250,7 +258,7 @@ logger( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level, const char* fmt
         const int total_len = prefix_len + message_len + 2;
 
         char*     buffer    = malloc( total_len );
-        if ( !buffer ) {
+        if (!buffer) {
                 ctx->status = ALLOC_ERR;
                 return ALLOC_ERR;
         }
@@ -276,7 +284,7 @@ logger( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level, const char* fmt
 
 enum CLOG_LOG_LEVEL get_log_level( struct logger_ctx* ctx )
 {
-        if ( NULL == ctx ) {
+        if (NULL == ctx) {
                 return LEVEL_LOG_DEBUG;
         }
         return ctx->default_level;
@@ -284,7 +292,7 @@ enum CLOG_LOG_LEVEL get_log_level( struct logger_ctx* ctx )
 
 enum CLOG_ERROR_T set_log_level( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level )
 {
-        if ( NULL == ctx ) {
+        if (NULL == ctx) {
                 return INVALID_PARAM;
         }
 
@@ -296,19 +304,19 @@ enum CLOG_ERROR_T set_log_level( struct logger_ctx* ctx, const enum CLOG_LOG_LEV
 struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
                                     const char*               directory ) {
         struct logger_ctx* ctx = malloc( sizeof( struct logger_ctx ) );
-        if ( NULL == ctx ) {
+        if (NULL == ctx) {
                 return NULL;
         }
 
         ctx->status = UNINITIALIZED;
 
-        if ( NULL == directory ) {
+        if (NULL == directory) {
                 ctx->status = INVALID_PARAM;
                 return ctx;
         }
 
         // Create a directory and write an empty log into it
-        if ( create_directory( directory ) != SUCCESS ) {
+        if (create_directory( directory ) != SUCCESS) {
                 ctx->status = FAILED_TO_CREATE_DIR;
                 return ctx;
         }
@@ -316,13 +324,13 @@ struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
         // Appends the current time and date to the name of the log file in the form of
         // "log-YYYY-MM-DD_HH-MM-SS.log"
         char* formatted_time = malloc( 20 ); // YYYY-MM-DD_HH-MM-SS + null terminator
-        if ( NULL == formatted_time ) {
+        if (NULL == formatted_time) {
                 ctx->status = ALLOC_ERR;
                 return ctx;
         }
         char* log_file_name =
             malloc( strlen( directory ) + 29 ); // path + /log- + formatted time + .log + null
-        if ( NULL == log_file_name ) {
+        if (NULL == log_file_name) {
                 ctx->status = ALLOC_ERR;
                 return ctx;
         }
@@ -339,7 +347,7 @@ struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
         // Creates a logging context with the path and a file pointer
         ctx->path      = log_file_name;
         ctx->directory = strdup( directory );
-        if ( NULL == ctx->directory ) {
+        if (NULL == ctx->directory) {
                 ctx->status = ALLOC_ERR;
                 free( ctx->path );
                 return ctx;
@@ -354,7 +362,7 @@ struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
         const int init_str_len = (int) ( strlen( INIT_LOG ) + strlen( timestamp )
                                          + 5 ); // + 3 for " - " and + 2 for '\n\0'
         char*     init_log_str = malloc( init_str_len * sizeof( char ) );
-        if ( NULL == init_log_str ) {
+        if (NULL == init_log_str) {
                 ctx->status = ALLOC_ERR;
                 free( ctx->path );
                 return ctx;
@@ -365,7 +373,7 @@ struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
 
         cleanup_old_logs( ctx );
 
-        if ( ctx->status != SUCCESS ) {
+        if (ctx->status != SUCCESS) {
                 free( ctx->path );
                 return ctx;
         }
