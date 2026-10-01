@@ -77,7 +77,7 @@ struct logger_ctx
 enum CLOG_ERROR_T log_message( struct logger_ctx* ctx, CLOG_LOG_LEVEL level, const char* fmt, ... );
 
 /**
- * Appends a message to a log file.
+ * Gets the log level for a logger context.
  *
  * @param ctx The logger context
  * @return enum CLOG_LOG_LEVEL to indicate current log level
