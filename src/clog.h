@@ -42,13 +42,15 @@ enum CLOG_ERROR_T
         FAILED_TO_LOCK       = -9,
 };
 
-enum CLOG_LOG_LEVEL
+typedef enum
 {
         LEVEL_LOG_DEBUG = 0,
         LEVEL_LOG_INFO,
         LEVEL_LOG_WARN,
         LEVEL_LOG_ERROR,
         LEVEL_LOG_FATAL,
+        LEVEL_LOG_UNKNOWN,
+} CLOG_LOG_LEVEL;
 };
 
 struct logger_ctx
