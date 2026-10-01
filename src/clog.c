@@ -225,22 +225,22 @@ log_message( struct logger_ctx* ctx, const CLOG_LOG_LEVEL level, const char* fmt
         const char* level_str;
         switch (level) {
                 case LEVEL_LOG_DEBUG :
-                        level_str = LOG_DEBUG_STR;
+                        level_str = ctx->text_config.log_debug_str;
                         break;
                 case LEVEL_LOG_INFO :
-                        level_str = LOG_INFO_STR;
+                        level_str = ctx->text_config.log_info_str;
                         break;
                 case LEVEL_LOG_WARN :
-                        level_str = LOG_WARN_STR;
+                        level_str = ctx->text_config.log_warn_str;
                         break;
                 case LEVEL_LOG_ERROR :
-                        level_str = LOG_ERROR_STR;
+                        level_str = ctx->text_config.log_error_str;
                         break;
                 case LEVEL_LOG_FATAL :
-                        level_str = LOG_FATAL_STR;
+                        level_str = ctx->text_config.log_fatal_str;
                         break;
                 default :
-                        level_str = LOG_UNKNOWN_STR;
+                        level_str = ctx->text_config.log_unknown_str;
                         break;
         }
 
@@ -286,15 +286,14 @@ log_message( struct logger_ctx* ctx, const CLOG_LOG_LEVEL level, const char* fmt
         return ctx->status;
 }
 
-enum CLOG_LOG_LEVEL get_log_level( struct logger_ctx* ctx )
-{
+CLOG_LOG_LEVEL get_log_level( const struct logger_ctx* ctx ) {
         if (NULL == ctx) {
                 return LEVEL_LOG_DEBUG;
         }
         return ctx->default_level;
 }
 
-enum CLOG_ERROR_T set_log_level( struct logger_ctx* ctx, const enum CLOG_LOG_LEVEL level )
+enum CLOG_ERROR_T set_log_level( struct logger_ctx* ctx, const CLOG_LOG_LEVEL level )
 {
         if (NULL == ctx) {
                 return INVALID_PARAM;
@@ -305,8 +304,7 @@ enum CLOG_ERROR_T set_log_level( struct logger_ctx* ctx, const enum CLOG_LOG_LEV
         return ctx->status;
 }
 
-struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
-                                    const char*               directory ) {
+struct logger_ctx* register_logger( const CLOG_LOG_LEVEL default_level, const char* directory ) {
         struct logger_ctx* ctx = malloc( sizeof( struct logger_ctx ) );
         if (NULL == ctx) {
                 return NULL;
@@ -348,6 +346,17 @@ struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
                   formatted_time );
         free( formatted_time );
 
+        // Creates a default logger config
+        const struct text_config default_conf = {
+                .log_init_str    = "[INIT]: Initializing logfile\n",
+                .log_debug_str   = "[DEBUG]",
+                .log_info_str    = "[INFO]",
+                .log_warn_str    = "[WARN]",
+                .log_error_str   = "[ERROR]",
+                .log_fatal_str   = "[FATAL]",
+                .log_unknown_str = "[UNKNOWN]",
+        };
+
         // Creates a logging context with the path and a file pointer
         ctx->path      = log_file_name;
         ctx->directory = strdup( directory );
@@ -358,20 +367,22 @@ struct logger_ctx* register_logger( const enum CLOG_LOG_LEVEL default_level,
         }
         ctx->default_level = default_level;
         ctx->file          = NULL;
-        ctx->max_logs      = CLOG_MAX_LOG_FILES;
+        ctx->max_logs      = CLOG_DEFAULT_MAX_LOG_FILES;
         ctx->status        = SUCCESS;
+        ctx->text_config   = default_conf;
         pthread_mutex_init( &ctx->mutex, NULL );
 
-        char*     timestamp    = get_timestamp( );
-        const int init_str_len = (int) ( strlen( INIT_LOG ) + strlen( timestamp )
-                                         + 5 ); // + 3 for " - " and + 2 for '\n\0'
-        char*     init_log_str = malloc( init_str_len * sizeof( char ) );
+        char*     timestamp = get_timestamp( );
+        const int init_str_len =
+            (int) ( strlen( ctx->text_config.log_init_str ) + strlen( timestamp )
+                    + 5 ); // + 3 for " - " and + 2 for '\n\0'
+        char* init_log_str = malloc( init_str_len * sizeof( char ) );
         if (NULL == init_log_str) {
                 ctx->status = ALLOC_ERR;
                 free( ctx->path );
                 return ctx;
         }
-        snprintf( init_log_str, init_str_len, "%s - %s", timestamp, INIT_LOG );
+        snprintf( init_log_str, init_str_len, "%s - %s", timestamp, ctx->text_config.log_init_str );
 
         append_to_file( ctx, init_log_str );
 
