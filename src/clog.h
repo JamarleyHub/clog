@@ -5,20 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define GET_STATUS( ctx ) ( ctx->status )
+#define GET_STATUS( ctx )           ( ctx->status )
 
 #ifndef INIT_LOG
   #define INIT_LOG "[INIT]: Initializing logfile\n"
 #endif
 
-#define LOG_DEBUG_STR               "[DEBUG]"
-#define LOG_INFO_STR                "[INFO]"
-#define LOG_WARN_STR                "[WARN]"
-#define LOG_ERROR_STR               "[ERROR]"
-#define LOG_FATAL_STR               "[FATAL]"
-#define LOG_UNKNOWN_STR             "[UNKNOWN]"
-
-#define CLOG_MAX_LOG_FILES          10
 #define __LIB_INTERNAL              __attribute__( ( visibility( "hidden" ) ) )
 
 #define CLOG_DEBUG( ctx, fmt, ... ) log_message( ctx, LEVEL_LOG_DEBUG, fmt, ##__VA_ARGS__ )
@@ -51,17 +43,28 @@ typedef enum
         LEVEL_LOG_FATAL,
         LEVEL_LOG_UNKNOWN,
 } CLOG_LOG_LEVEL;
+
+struct text_config
+{
+        char* log_init_str;
+        char* log_debug_str;
+        char* log_info_str;
+        char* log_warn_str;
+        char* log_error_str;
+        char* log_fatal_str;
+        char* log_unknown_str;
 };
 
 struct logger_ctx
 {
-        pthread_mutex_t     mutex;
-        char*               path;
-        char*               directory;
-        enum CLOG_LOG_LEVEL default_level;
-        FILE*               file;
-        uint8_t             max_logs;
-        enum CLOG_ERROR_T   status;
+        pthread_mutex_t    mutex;
+        char*              path;
+        char*              directory;
+        CLOG_LOG_LEVEL     default_level;
+        FILE*              file;
+        uint8_t            max_logs;
+        enum CLOG_ERROR_T  status;
+        struct text_config text_config;
 };
 
 /**
